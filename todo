@@ -1,0 +1,31 @@
+
+
+
+- Use Isomap to visalise Cifar10
+- Use Isomap to visualise Cifar10 + Data-Augmented images
+- define Resnet model, or get predefined model from either timm or huggingface
+- write training and evaluation loops for cifar10 with arbitrary model, option for data-augment
+- train resnet on cifar10
+- train polynomial regressions (using Cross-Entropy Loss) on cifar10, with and without data-augment
+- train polynomial regressions on subsampled cifar10 (to allow for larger poly order), with and without data-augment
+- find top eigenvectors of the hessian for all trained models, to precondition HMC
+- run nuts with found eigenvectors for all models and all possible permutations of settings
+
+Figures:
+
+- Isomap 2d Embedding Cifar10, classes highlighted
+- Isomap 3d Embedding Cifar10, classes highlighted
+- Isomap 2d Embedding Cifar10+augment, classes highlighted
+- Isomap 3d Embedding Cifar10+augment, classes highlighted
+- resnet model training loss & accuracy vs iteration number, no data-augment
+- resnet model training loss & accuracy vs iteration number, yes data-augment
+- Table with accuracies for polynomial models of all tested orders, with/without subsampling, with/without data-augment, with/without HMC
+
+Paper:
+
+- write explanation of resnets
+- write explanation of HMC
+- write explanation of data-augmenting procedure
+- write analysis on the impact of HMC on accuracy
+- conclude whether resnets alone beat the shitty polynomial regression + HMC + data-augment
+

@@ -44,12 +44,48 @@ def enlarge_cifar10_dataset(data_x, data_y, n_enlarge=20):
 
 if __name__ == "__main__":
 
-    data_train = torchvision.datasets.CIFAR10('../datasets/', train=True, download=True)
-    data_test = torchvision.datasets.CIFAR10('../datasets/', train=False, download=True)
+    import os
+
+    os.makedirs('./datasets', exist_ok=True)
+
+    # ========================================================================================
+    # Loading datasets and augmenting them
+    # ========================================================================================
+
+    data_train = torchvision.datasets.CIFAR10('./datasets/', train=True, download=True)
+    data_test = torchvision.datasets.CIFAR10('./datasets/', train=False, download=True)
 
     data_x = data_train.data
     data_y = data_train.targets
 
-    augmented_x, augmented_y = enlarge_cifar10_dataset(data_x, data_y, n_enlarge=10)
+    test_data_x = data_test.data
+    test_data_y = t.LongTensor(data_test.targets)
 
+    augmented_x, augmented_y = enlarge_cifar10_dataset(data_x, data_y, n_enlarge=20)
+
+    # ========================================================================================
+    # Normalizing datasets to mean zero and unit variance
+    # ========================================================================================
+
+    x_mean = data_x.mean(dim=0)
+    x_std = data_x.std(dim=0)
+
+    x_mean_aug = augmented_x.mean(dim=0)
+    x_std_aug = augmented_x.std(dim=0)
+
+    data_x = (data_x - x_mean) / (1e-7 + x_std)
+    augmented_x = (augmented_x - x_mean_aug) / (1e-7 + x_std_aug)
+
+    test_data_x_not_aug = (test_data_x - x_mean) / (1e-7 + x_std)
+    test_data_x_aug = (test_data_x - x_mean_aug) / (1e-7 + x_std_aug)
+
+    # ========================================================================================
+    # saving datasets for ease of use with rest of code
+    # ========================================================================================
+
+    t.save((data_x, data_y), './datasets/cifar10_training.pth')
+    t.save((augmented_x, augmented_y), './datasets/cifar10_training_augmented.pth')
+
+    t.save((test_data_x_not_aug, test_data_y), './datasets/cifar10_test_not_augmented.pth')
+    t.save((test_data_x_aug, test_data_y), './datasets/cifar10_test_augmented.pth')
 

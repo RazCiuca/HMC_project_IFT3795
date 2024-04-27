@@ -45,25 +45,36 @@ def hvp_model_np(tangents_np, model, data_x, data_y, loss_fn):
 
     return t.cat([x.flatten() for x in hessian_col]).detach().cpu().numpy()
 
-def grad_model(model, data_x, data_y, loss_fn, batch_size=None):
+def grad_model(model, data_x, data_y, loss_fn, chunk_size=128):
 
     # send data to gpu
     data_x = data_x.cuda()
     data_y = data_y.cuda()
 
-    if batch_size is not None:
-        n_data = data_x.size(0)
-        indices = np.random.permutation(np.arange(n_data))[:batch_size]
-        data_x = data_x[indices]
-        data_y = data_y[indices]
+    n_data = data_x.size(0)
+    n_iter = int(n_data/chunk_size) + 1
 
-    preds = model(data_x)
+    gradients = t.zeros(model.get_vectorized_params().size())
 
-    loss = loss_fn(preds, data_y)
+    total_loss = 0
 
-    gradients = t.autograd.grad(loss, model.parameters())
+    for i in range(n_iter):
+        i1 = i*chunk_size
+        i2 = (i+1)*chunk_size
 
-    return loss.detach().cpu(), t.cat([x.flatten() for x in gradients]).detach().cpu()
+        data_x = data_x[i1:i2]
+        data_y = data_y[i1:i2]
+
+        preds = model(data_x)
+
+        loss = loss_fn(preds, data_y)
+
+        grads = t.autograd.grad(loss, model.parameters())
+        gradients += (i2-i1) * t.cat([x.flatten() for x in grads]).detach().cpu()
+
+        total_loss += loss.item()*(i2-i1)
+
+    return total_loss/n_data, gradients/n_data
 
 def top_k_hessian_eigen(model, data_x, data_y, loss_fn, top_k = 100, mode='LA', batch_size=None):
     """

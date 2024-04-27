@@ -27,15 +27,7 @@ resnet.py
 (todo) model_trainer.py
     trains a given model on a given dataset
 
-(todo) train_all_model.py
-    uses the model_trainer to train all models that we wwant
+(todo) main.py
+    main triple loop
 
-(todo) find_all_model_eigenstuff.py
-    finds the eigenvalues and vectors of all models we want
-
-(todo) sample_all_models.py
-    uses nuts6 to sample from the likelihoods of all models, and saves the BayesAveragedModel for each
-
-(todo) evaluate_all_models.py
-    evaluate all models on the validation set
 

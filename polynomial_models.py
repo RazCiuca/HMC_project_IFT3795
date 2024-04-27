@@ -25,7 +25,7 @@ class PolynomialRegressor(nn.Module):
 
         self.n_predictors = 0
 
-        for degree in range(1, poly_degree):
+        for degree in range(1, poly_degree+1):
 
             degree_indices = list(combinations_with_replacement( list(range(self.n_in)), degree) )
             self.indices_to_gather.append(t.LongTensor(degree_indices))
@@ -89,11 +89,12 @@ class PolynomialRegressor(nn.Module):
 if __name__ == "__main__":
 
     # testing stuff
-    n_in = 64
-    n_out = 8
+    n_in = 32*32*3
+    n_out = 10
 
-    X = t.randn(3000, n_in)
+    X = t.randn(128, n_in)
 
-    quad_model = PolynomialRegressor(n_in, n_out, poly_degree=3)
+    quad_model = PolynomialRegressor(n_in, n_out, poly_degree=2)
 
-    preds = quad_model(X)
+    print(quad_model.get_vectorized_params().size())
+

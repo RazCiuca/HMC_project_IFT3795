@@ -58,14 +58,20 @@ if __name__ == "__main__":
     data_x = data_train.data
     data_y = data_train.targets
 
-    test_data_x = data_test.data
-    test_data_y = t.LongTensor(data_test.targets)
-
     augmented_x, augmented_y = enlarge_cifar10_dataset(data_x, data_y, n_enlarge=20)
 
     # ========================================================================================
     # Normalizing datasets to mean zero and unit variance
     # ========================================================================================
+
+    data_x = t.from_numpy(data_x).float().transpose(1, 3)
+    data_y = t.LongTensor(data_y)
+
+    test_data_x = t.from_numpy(data_test.data).float().transpose(1, 3)
+    test_data_y = t.LongTensor(data_test.targets)
+
+    augmented_x = t.from_numpy(augmented_x).float().transpose(1, 3)
+    augmented_y = t.LongTensor(augmented_y)
 
     x_mean = data_x.mean(dim=0)
     x_std = data_x.std(dim=0)

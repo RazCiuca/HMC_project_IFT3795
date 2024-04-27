@@ -31,13 +31,16 @@ class PolynomialRegressor(nn.Module):
             self.indices_to_gather.append(t.LongTensor(degree_indices))
             self.n_predictors += len(self.indices_to_gather[-1])
 
-        self.W = nn.Parameter(t.randn(self.n_predictors, self.n_out))
+        self.W = nn.Parameter(t.zeros(self.n_predictors, self.n_out))
         self.b = nn.Parameter(t.zeros(self.n_out))
 
         self.compute_param_shapes()
 
     def forward(self, x):
         batch_size = x.size(0)
+
+        # flatten all dimensions but the first one
+        x = x.flatten(1, -1)
 
         z = []
 

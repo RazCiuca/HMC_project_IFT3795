@@ -230,6 +230,22 @@ def build_tree(theta, r, grad, logu, v, j, epsilon, f, joint0):
 
     return thetaminus, rminus, gradminus, thetaplus, rplus, gradplus, thetaprime, gradprime, logpprime, nprime, sprime, alphaprime, nalphaprime
 
+def sampling_from_eigen(eigenvals, eigenvecs, n_samples):
+    """
+    :param eigenvals: np.array(k)
+    :param eigenvecs: np.array(k, D), eigenvectors are assumed to have norm 1
+    :param known_elementwise_prec: np.array(D), optional known precisions in each dimension
+    :return: np.array(D)
+    """
+    # we sample momenta with precision equal to eigenvalues
+    eigen_sqrt = np.sqrt(eigenvals)
+
+    # first generate a random vector in the eigenvalue directions
+    eigen_r0 = np.random.randn(n_samples, eigenvals.shape[0])/eigen_sqrt.reshape(1, -1)
+
+    return eigen_r0 @ eigenvecs
+
+
 def eigen_r0_sampler(eigenvals, eigenvecs, known_elementwise_prec=None):
     """
     :param eigenvals: np.array(k)

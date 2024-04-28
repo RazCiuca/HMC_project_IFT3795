@@ -12,13 +12,15 @@ from itertools import combinations_with_replacement
 class PolynomialRegressor(nn.Module):
     """
     """
-    def __init__(self, n_in, n_out, poly_degree):
+    def __init__(self, n_in, n_out, poly_degree, avg_pool_size=None):
         super(PolynomialRegressor, self).__init__()
         self.n_in = n_in
         self.n_out = n_out
         self.poly_degree = poly_degree
         self.poly_indices = []
         self.n_var = 0  # number of variables in the layer before the last
+
+        self.avg_pool = None if avg_pool_size is None else nn.AvgPool2d(kernel_size=avg_pool_size, stride=avg_pool_size)
 
         # will contain for each degree of the polynomial, a list of tuples corresponding to the indices to gather
         self.indices_to_gather = []
@@ -31,7 +33,7 @@ class PolynomialRegressor(nn.Module):
             self.indices_to_gather.append(t.LongTensor(degree_indices))
             self.n_predictors += len(self.indices_to_gather[-1])
 
-        self.W = nn.Parameter(t.zeros(self.n_predictors, self.n_out))
+        self.W = nn.Parameter(t.randn(self.n_predictors, self.n_out)/self.n_predictors**0.5)
         self.b = nn.Parameter(t.zeros(self.n_out))
 
         self.compute_param_shapes()
@@ -40,6 +42,8 @@ class PolynomialRegressor(nn.Module):
         batch_size = x.size(0)
 
         # flatten all dimensions but the first one
+        if self.avg_pool is not None:
+            x = self.avg_pool(x)
         x = x.flatten(1, -1)
 
         z = []
@@ -47,8 +51,6 @@ class PolynomialRegressor(nn.Module):
         for indices in self.indices_to_gather:
             # gather all the indices, multiply them together, and append to z
             z.append(t.prod(x[:, indices], dim=2))
-
-        print([y.shape for y in z])
 
         total_x = t.cat(z, dim=1)
 

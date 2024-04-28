@@ -1,0 +1,63 @@
+
+polynomial regressions:
+- linear, n_params = 30730
+    no data augment, top eigenvalue: 95
+        bayesian averaged
+            acc: 0.396599
+        point-estimate
+            loss:1.56048, acc: 0.3972
+    data-augment
+        bayesian averaged
+            acc: 0.37729
+        point-estimate
+             loss:2.08220, acc: 0.3729
+
+- quadratic (on 16x16 patches), n_params = 2960650
+    no data augment, top eigenvalue: 6927
+        bayesian averaged
+            acc: 0.53259
+        point-estimate
+            loss:0.77436, acc: 0.5377
+    data-augment
+        bayesian averaged
+            acc: 0.538199
+        point-estimate
+            loss:1.56390, acc: 0.5395
+
+
+- quad (on 8x8 patches), n_params =187210
+    no data augment, top eigenvalue:524
+        bayesian averaged
+            acc: 0.51669
+        point-estimate
+            loss:1.28700, acc: 0.5159
+    data-augment
+        bayesian averaged
+            acc: val:0.5026999
+        point-estimate
+            loss:1.73158, acc: 0.5014
+
+resnet:
+- small, n_params = 104234
+     no data augment, top eigenvalue: 0.18
+        bayesian averaged
+            acc: 0.73679
+        point-estimate
+            loss:0.00010, acc: 0.7897
+    data-augment
+        bayesian averaged
+            acc: 0.850199
+        point-estimate
+            loss:0.39152, acc: 0.8500
+
+- medium, n_params =413514
+     no data augment
+        bayesian averaged
+            acc: 0.84
+        point-estimate
+            loss:0.00005, acc: 0.8478
+    data-augment
+        bayesian averaged
+            acc: 0.871299
+        point-estimate
+            loss:0.29877, acc: 0.8662

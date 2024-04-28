@@ -92,15 +92,18 @@ if __name__ == "__main__":
 
     data_x, data_y = t.load('./datasets/cifar10_training.pth')
     # data_x, data_y = t.load('./datasets/cifar10_training_augmented.pth')
-    validation_dataset = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
+    validation_dataset = (x.to(device) for x in t.load('./datasets/cifar10_test_not_augmented.pth'))
+    # validation_dataset = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
+
     n_data = data_x.size(0)
 
-    model = ResNet9(3, 10, expand_factor=2)
+    model = ResNet9(3, 10, expand_factor=8)
+
+    # model = PolynomialRegressor(3 * 32 * 32, n_out=10, poly_degree=1, avg_pool_size=None)
     # model = PolynomialRegressor(3*16*16, n_out=10, poly_degree=2, avg_pool_size=2)
     # model = PolynomialRegressor(3*8*8, n_out=10, poly_degree=2, avg_pool_size=4)
     # model = PolynomialRegressor(3*4*4, n_out=10, poly_degree=3, avg_pool_size=8)
 
-    # model = PolynomialRegressor(3*32*32, n_out=10, poly_degree=1, avg_pool_size=None)
 
     # ================================================================================
     # Training The model
@@ -109,7 +112,7 @@ if __name__ == "__main__":
     loss_fn = nn.CrossEntropyLoss()
 
     trained_model = train(model, data_x, data_y, loss_fn, device, batch_size=512,
-                    lr=1e-2, momentum=0.98, n_iter=10000, weight_decay=0.0, verbose=True, training_run_name='test_run',
+                    lr=1e-2, momentum=0.95, n_iter=10000, weight_decay=0.0, verbose=True, training_run_name='test_run',
                           validation_dataset=validation_dataset)
 
     # ================================================================================
@@ -120,10 +123,12 @@ if __name__ == "__main__":
     from nuts import nuts6, eigen_r0_sampler, sampling_from_eigen
     from BayesAveragedModel import *
 
-    eigvals, eigvecs = top_k_hessian_eigen(trained_model, data_x, data_y, loss_fn, top_k=100, mode='LA', batch_size=5000)
+    eigvals, eigvecs = top_k_hessian_eigen(trained_model, data_x, data_y, loss_fn, top_k=50, mode='LA', batch_size=5000)
 
     print('top eigenvalues are: ')
     print(eigvals)
+
+    print(f"number of parameters: {eigvecs.shape[0]}")
 
     eigvals = eigvals * n_data
     eigvecs = eigvecs.T
@@ -132,17 +137,20 @@ if __name__ == "__main__":
         return eigen_r0_sampler(eigvals, eigvecs)
 
 
+
     # ================================================================================
     # sampling purely from the eigenvalues we know
     # ================================================================================
     initial_params_pt = trained_model.get_vectorized_params().unsqueeze(0)
 
-    param_samples = t.from_numpy(sampling_from_eigen(eigvals, eigvecs, 5000)).to(device).float() + initial_params_pt
+    param_samples = np.stack([r0_sampler() for i in range(100)], axis=0)
+    param_samples = t.from_numpy(param_samples).to(device).float() + initial_params_pt
 
     param_samples = param_samples.to(device)
 
     averaged_model = BayesAveragedModel(trained_model, param_samples)
-    data_x_val, targets_val = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
+    data_x_val, targets_val = (x.to(device) for x in t.load('./datasets/cifar10_test_not_augmented.pth'))
+    # data_x_val, targets_val = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
     averaged_val = get_validation(averaged_model, data_x_val, targets_val)
 
     print(f"averaged validation for easy eigensampling: {averaged_val}")
@@ -170,12 +178,12 @@ if __name__ == "__main__":
 
         return n_data*loss, n_data*gradients.cpu().numpy()
 
-    samples, lnprob, epsilon = nuts6(log_loss_grad, M=1000, Madapt=1000, theta0=initial_params, r0_sampler=r0_sampler)
-
-    samples_pt = t.from_numpy(samples).float().to(device)
-    averaged_model = BayesAveragedModel(trained_model, samples_pt)
-    data_x_val, targets_val = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
-    averaged_val = get_validation(averaged_model, data_x_val, targets_val)
+    # samples, lnprob, epsilon = nuts6(log_loss_grad, M=1000, Madapt=1000, theta0=initial_params, r0_sampler=r0_sampler)
+    #
+    # samples_pt = t.from_numpy(samples).float().to(device)
+    # averaged_model = BayesAveragedModel(trained_model, samples_pt)
+    # data_x_val, targets_val = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
+    # averaged_val = get_validation(averaged_model, data_x_val, targets_val)
 
     # print(samples.shape)
     print(f"averaged val:{averaged_val}")

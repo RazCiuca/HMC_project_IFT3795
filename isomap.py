@@ -11,11 +11,11 @@ def generate_figures():
     # cifar10_test_augmented = t.load('./datasets/cifar10_test_augmented.pth')
 
     sets = [
-        ("cifar10_training", *cifar10_training),
-        ("cifar10_training_augmented", *cifar10_training_augmented),
+        ("cifar10_training", "pas augmenté", *cifar10_training),
+        ("cifar10_training_augmented", "augmenté", *cifar10_training_augmented),
     ]
 
-    for title, x, y in sets:
+    for dataset, variant, x, y in sets:
         shape = x.shape
         reshaped = x.reshape(shape[0], np.prod(shape[1:]))
         N_samples = 4000
@@ -40,14 +40,14 @@ def generate_figures():
         fig = plt.figure()
         ax = fig.add_subplot()
         ax.scatter(new_coords[:, 0], new_coords[:, 1], c=subsampled_labels, alpha=0.5)
-        plt.title("Plongement 2D des images par isomap")
-        fig.savefig(f"{title}_2d.png", dpi=500)
+        #plt.title(f"Plongement 2D des images par isomap ({variant})")
+        fig.savefig(f"{dataset}_2d.png", dpi=500)
 
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
         ax.scatter(new_coords[:, 0], new_coords[:, 1], new_coords[:, 2], c=subsampled_labels, alpha=0.5)
-        plt.title("Plongement 3D des images par isomap")
-        fig.savefig(f"{title}_3d.png", dpi=500)
+        #plt.title(f"Plongement 3D des images par isomap ({variant})")
+        fig.savefig(f"{dataset}_3d.png", dpi=500)
 
 def test():
     x, y = t.load('./datasets/cifar10_training.pth')

@@ -45,6 +45,10 @@ def train(model, data_x, data_y, loss_fn, device, batch_size=256,
 
     model = model.to(device)
 
+    iterations = []
+    losses = []
+    validations = []
+
     for iter in range(n_iter):
         model.train()
 
@@ -65,7 +69,7 @@ def train(model, data_x, data_y, loss_fn, device, batch_size=256,
         loss = loss_fn(preds, targets)
 
         if verbose:
-            if iter % 200 == 0 and iter != 0:
+            if iter % 50 == 0 and iter != 0:
 
                 val_accuracy = 0.0
 
@@ -74,11 +78,15 @@ def train(model, data_x, data_y, loss_fn, device, batch_size=256,
 
                 print(training_run_name + f" iter {iter}, loss:{loss.item():.5f}, acc: {val_accuracy:.4f}")
 
+                losses.append(loss.item())
+                validations.append(val_accuracy.item())
+                iterations.append(iter)
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    return model
+    return model, (iterations, losses, validations)
 
 if __name__ == "__main__":
 
@@ -90,18 +98,18 @@ if __name__ == "__main__":
     # Defining Models and Loading Datasets
     # ================================================================================
 
-    data_x, data_y = t.load('./datasets/cifar10_training.pth')
-    # data_x, data_y = t.load('./datasets/cifar10_training_augmented.pth')
-    validation_dataset = (x.to(device) for x in t.load('./datasets/cifar10_test_not_augmented.pth'))
-    # validation_dataset = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
+    # data_x, data_y = t.load('./datasets/cifar10_training.pth')
+    data_x, data_y = t.load('./datasets/cifar10_training_augmented.pth')
+    # validation_dataset = (x.to(device) for x in t.load('./datasets/cifar10_test_not_augmented.pth'))
+    validation_dataset = (x.to(device) for x in t.load('./datasets/cifar10_test_augmented.pth'))
 
     n_data = data_x.size(0)
 
-    model = ResNet9(3, 10, expand_factor=8)
+    model = ResNet9(3, 10, expand_factor=4)
 
     # model = PolynomialRegressor(3 * 32 * 32, n_out=10, poly_degree=1, avg_pool_size=None)
     # model = PolynomialRegressor(3*16*16, n_out=10, poly_degree=2, avg_pool_size=2)
-    # model = PolynomialRegressor(3*8*8, n_out=10, poly_degree=2, avg_pool_size=4)
+    model = PolynomialRegressor(3*8*8, n_out=10, poly_degree=2, avg_pool_size=4)
     # model = PolynomialRegressor(3*4*4, n_out=10, poly_degree=3, avg_pool_size=8)
 
 
@@ -111,9 +119,38 @@ if __name__ == "__main__":
 
     loss_fn = nn.CrossEntropyLoss()
 
-    trained_model = train(model, data_x, data_y, loss_fn, device, batch_size=512,
-                    lr=1e-2, momentum=0.95, n_iter=10000, weight_decay=0.0, verbose=True, training_run_name='test_run',
+    trained_model, plotting_stuff = train(model, data_x, data_y, loss_fn, device, batch_size=512,
+                    lr=1e-3, momentum=0.95, n_iter=10000, weight_decay=0.0, verbose=True, training_run_name='test_run',
                           validation_dataset=validation_dataset)
+
+    # ================================================================================
+    # Plotting Stuff
+    # ================================================================================
+
+    import matplotlib.pyplot as plt
+
+    iterations, losses, validations = plotting_stuff
+
+    fig, ax1 = plt.subplots()
+
+    color = 'tab:red'
+    ax1.set_xlabel('iteration')
+    ax1.set_ylabel('training loss', color=color)
+    ax1.plot(np.array(iterations), np.array(losses) , color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+    ax1.set_yscale('log')
+
+    ax1.set_title("training loss and validation accuracy for quadratic model on 8x8 cifar10")
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color = 'tab:blue'
+    ax2.set_ylabel('top-1 validation accuracy', color=color)  # we already handled the x-label with ax1
+    ax2.plot(np.array(iterations), np.array(validations), color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()
 
     # ================================================================================
     # Computing Top eigenvalues
